@@ -1,23 +1,35 @@
-import requests
-import pandas as pd
-import psycopg2
-from segredos import passwd, database, user, host, port, api_url
+import requests #importa a biblioteca que puxa os dados da API
+import pandas as pd #importa o pandas pra tratar os dados
+import psycopg2 #importa a biblioteca que faz a ligação com o PostgreSQL
+from segredos import passwd, database, user, host, port, token #importa os dados sensíveis que não podem ser upados no github
+import time #biblioteca que usa pra poder esperar o danado do minuto
 
 
+#cria a api do request
+api_url = f'https://www.ctasmart.com.br:8443/SvWebSincronizaAbastecimentos?token={token}&formato=json'
 
-#pegar dados da api
-def GetDataApi():
+
+def GetDataApi(api_url):
+    '''
+    função que devolve os dados pegos da api
+    '''
+    #puxa os dados
     response = requests.get(api_url)
     data = response.json()
+
+    #trata os dados da api
     df_final2 = pd.json_normalize(data['abastecimentos'])
+    df_final2.to_csv('temp/file.csv')
     return df_final2
 
-#df = get_data_api
 
-df = pd.read_csv('file.csv')
 
 
 def UparAuxiliares(df):
+    '''
+    empacotando tudo em função pra caso precise usar em outros lugares, essa é a que gera e upa todas as tabelas exceto a principal
+    talvez seja o caso de futuramente separar em duas
+    '''
     conn = psycopg2.connect(database = database,
                     user = user,
                     host = host,
@@ -25,7 +37,13 @@ def UparAuxiliares(df):
                     port = port)
 
 
+    #leio todas as colunas da tabela cheia e normalizada
     colunas = df.columns
+
+    #crio uma lista pra cada uma das tabelas que quero criar, pra armazenas as colunas de cada uma
+
+    #olhando agora muito provavelmente essas listas não precisam existir e o dicionario poderia ser uma lista
+    #vou deixar esse comentário pra ajeitar quando tiver tempo
     postos = []
     frentistas = []
     veiculos =[]
@@ -35,7 +53,7 @@ def UparAuxiliares(df):
     tanques = []
     empresas = []
 
-#listTables = [postos, frentistas, veiculos, combustiveis, bombas, motoristas, tanques, empresas]
+    #crio um dicionario com palavra-chave pra cada lista, pra poder fazer o loop e separar as colunas que quero pra cada uma
     dictList = {
     'posto': postos,
     'frentista': frentistas,
@@ -45,19 +63,28 @@ def UparAuxiliares(df):
     'motorista':motoristas,
     'tanque':tanques,
     'empresa':empresas
-}
+    }
 
+    #crio um dicionario vazio pra armazenar palavra-chave pra cada dataframe que for criado
     dictTable = {}
 
+    #cria um dataframe pra cada item no dicionario dictList
     for key, item in dictList.items():
+        #cria uma lista pra cada item do dictList, pega as colunas que contenham a palavra-chave no nome
         list = []
         for i in colunas:
             if key in i:
                 list.append(i)
-    #item.append()
-    #print(item[0])
+        #cria um dataframe pegando só as colunas listadas e remove as linhas duplicatas.
         dictTable[f'df{key.capitalize()}'] = df[list].drop_duplicates()
 
+
+    #nesse ponto aqui as tabelas já estão prontas, o que falta é subir pro postgreSQL só
+
+    '''
+    essa parte é um tanto complicada pra explicar e precisa entender um pouquinho de SQL, mas em resumo ela
+    cria comandos pra upar todas as tabelas de uma vez só no banco de dados
+    '''
     for key, item in dictTable.items():
         key = key.replace('df','').lower()
         id = f'{key}.id'
@@ -93,10 +120,11 @@ def UparAuxiliares(df):
     conn.commit()
     conn.close()
 
-#upar_auxiliares(df)
-
 
 def UparLancamentos(df):
+    '''
+    essa cria e upa a tabela de lançamentos, de um jeito bem parecido com a outra função
+    '''
     conn = psycopg2.connect(database = database,
                     user = user,
                     host = host,
@@ -106,6 +134,8 @@ def UparLancamentos(df):
 
     colunas = df.columns
 
+    #olhando agora muito provavelmente essas listas não precisam existir e o dicionario poderia ser uma lista
+    #vou deixar esse comentário pra ajeitar quando tiver tempo
     postos = []
     frentistas = []
     veiculos =[]
@@ -124,22 +154,29 @@ def UparLancamentos(df):
     'motorista':motoristas,
     'tanque':tanques,
     'empresa':empresas
-}
+    }
 
+    #olhando de novo tem lista demais nesse código, dava pra ter usado duas ao invés de três
+    #cria duas listas, uma com as colunas e outra pra armazenar as colunas filtradas.
     colunasUsaveis = colunas.to_list()
     colunasPraUsar = []
 
     for key, item in dictList.items():
+        #remove as colunas que tem a palavra-chave das colunas usaveis exceto a que tem o id
         for i in colunas:
             if key in i and '.id' not in i:
                 print(i)
                 colunasUsaveis.remove(i)
+    #remove as colunas que são lixo
     for i in colunasUsaveis:
         if 'extra' not in i and 'Unnamed' not in i:
             colunasPraUsar.append(i)
 
+    #filtra o dataframe pra usar só as colunas selecionadas
     df = df[colunasPraUsar]
     names = df.columns
+
+    #formata as colnas direitinho pra upar pro banco de dados
     for name in names:
         if 'data' in name:
             print(name)
@@ -153,6 +190,7 @@ def UparLancamentos(df):
                 print(name)
 
 
+    #cria um comando pra cada linha e upa elas no banco de dados
     for i, row in df.iterrows():
         command = 'INSERT INTO public.lancamentos('
         c = 1
@@ -181,9 +219,68 @@ def UparLancamentos(df):
     conn.close()
             
             
+#deixo essas linhas aqui pra caso quiser fazer testes com um csv sem ter que puxar tudo de novo da API
+#df = pd.read_csv(r'temp\file.csv')
 
-UparLancamentos(df)
- 
+def PuxarTudo(api_url, GetDataApi):
+    """
+    função pra fazer requests na API até que pegue todos os dados
+    """
+
+    #lê faz o primeiro request, pegando os arquivos mais antigos
+    print('primeira leitura da API')
+    df = GetDataApi(api_url)
+
+    #ajusta as coisas e pega a data do ultimo lançamento que veio no sistema
+    df['data_inicio'] = pd.to_datetime(df['data_inicio'])
+    last = df['data_inicio'].max()
+    last_f = last.strftime('%d/%m/%Y')
+    hoje = pd.to_datetime('01/10/2024', dayfirst = True)
+
+
+    #lista vazia pra armazenar as tabelas e um contador pra ir salvando em pdf também
+    lista = []
+    count = 0
+    #enquanto a data do ultimo lançamento for anterior a hoje
+    while last < hoje:
+        #espera um minuto (limitação da api)
+        print('Esperando um minuto')
+        count += 1
+        time.sleep(60)
+
+        #gera a url do request tendo a data de incio = a ultima data que veio
+        url = f'https://www.ctasmart.com.br:8443/SvWebSincronizaAbastecimentos?token={token}&formato=json&data_inicio={last_f}'
+
+        #faz o request em si
+        print('começando busca na API')
+        try:
+            df = GetDataApi(url)
+        except:
+            print('erro pegando dados')
+            print(url)
+            break
+        
+        #junta o resultado na lista e salva em csv também
+        lista.append(df)
+        df.to_csv(f'temp/{count}.csv')
+
+        #pega de novo a ultima data que tem
+        try:
+            df['data_inicio'] = pd.to_datetime(df['data_inicio'], dayfirst = True)
+            last = df['data_inicio'].max()
+            last_f = last.strftime('%d/%m/%Y')
+            print(f'Ultima data: {last_f}')
+        except:
+            print('erro tratando a tabela')
+            print(df)
+            lista.append(df)
+            df.to_csv(f'temp/{count}.csv')
+            break
+    
+    #junta todas as tabelas e retorna uma só
+    df_up = pd.concat(lista)
+    df_up = df_up.drop_duplicates()
+    return df_up
 
 
 
