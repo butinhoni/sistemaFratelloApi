@@ -1,5 +1,4 @@
 import funcoes #importa o arquivo com as funções
-from segredos import passwd, database, user, host, port, token #importa os dados sensíveis que não podem ser upados no github
 from datetime import datetime, timedelta #importa a biblioteca de trabalhar com data
 import pandas as pd
 
@@ -22,7 +21,7 @@ aqui vou puxar os dados do sistema
 '''
 #pega a data de ontem
 hoje = datetime.now()
-ontem = hoje - timedelta(days=1)
+ontem = hoje - timedelta(days=30)
 ontem = ontem.strftime('%d/%m/%Y')
 
 #monta a url
@@ -31,7 +30,9 @@ url += f'&data_inicio={ontem}'
 
 #puxa as tabelas da API
 dictAPI = {}
+print('Lendo API')
 dfAPI = funcoes.GetDataApi(url)
+print('API lida')
 #dfAPI = pd.read_csv('temp/file.csv')
 dfAPI = dfAPI[dfAPI['data_inicio'] == ontem]
 listaGeral = []
@@ -47,17 +48,23 @@ for key, item in dictBancoDados.items():
             list.append(coluna)
             listaGeral.append(coluna)
     df2 = dfAPI[list]
+    df2 = df2.drop_duplicates()
     dictAPI[key] = df2
 
 
 #checa se as subtabelas tem todos os ids que vieram no lançamento e salva as que precisa adicionar
 linhas = {}
 for key, item in dictAPI.items():
+    print(key)
     show = []
-    ids = df[f'{key}.id'].unique()
+    df.to_csv(f'temp/{key}.csv')
+    ids = dictBancoDados[key]['id'].unique()
+    ids = [str(x).strip() for x in ids]
+    with open (f'temp/{key}.txt','w') as file:
+        file.write(str(ids))
     for i, row in item.iterrows():
         if str(row[f'{key}.id']) not in ids:
-            print(f'ID desconhecido {key} - {row[f"{key}.id"]}')
+            print(f'ID não encontrado {key} - {row[f"{key}.id"]}')
             show.append('True')
         else:
             show.append('False')
@@ -72,17 +79,15 @@ comandos = funcoes.ComandosDict(linhas)
 print('Dados Tratados e Comandos Gerados')
 
 #roda os comandos no banco de dados
-#for comando in comandos:
-    #funcoes.SimpleCommand(comando)
+for comando in comandos:
+    print(comando)
+    funcoes.SimpleCommand(comando)
 print('Tabelas Auxiliares Upadas')
 
 
 #trata a tabela principal e tira as duplicatas
 seqs = df['id'].unique()
 list = []
-
-
-
 for i, row in dfAPI.iterrows():
     seq = row['id']
     dfCheck = df[df['id'] == seq]

@@ -322,6 +322,8 @@ def ListarTabelas():
     tabelas = []
     for i in list:
         tabelas.append(i[0])
+    cur.close()
+    conn.close()
     return(tabelas)
 
 
