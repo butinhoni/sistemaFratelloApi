@@ -13,7 +13,6 @@ for tabela in tabelas:
 
 #pega a principal
 df = dictBancoDados['lancamentos']
-
 #lista as tabelas e que vão ser atualizadas, armazenando as linhas tb (não faço ideia como vai funcionar)
 dictUparBancoDados = {}
 
@@ -32,8 +31,8 @@ url += f'&data_inicio={ontem}'
 
 #puxa as tabelas da API
 dictAPI = {}
-#dfAPI = funcoes.GetDataApi(url)
-dfAPI = pd.read_csv('temp/file.csv')
+dfAPI = funcoes.GetDataApi(url)
+#dfAPI = pd.read_csv('temp/file.csv')
 dfAPI = dfAPI[dfAPI['data_inicio'] == ontem]
 listaGeral = []
 
@@ -79,15 +78,31 @@ print('Tabelas Auxiliares Upadas')
 
 
 #trata a tabela principal e tira as duplicatas
-seqs = df['sequencial'].unique()
+seqs = df['id'].unique()
 list = []
+
+
+
 for i, row in dfAPI.iterrows():
-    if row['sequencial'] in seqs:
-        list.append("False")
-    else:
+    seq = row['id']
+    dfCheck = df[df['id'] == seq]
+    if seq not in seqs:
         list.append("True")
+    else:
+        checker = 0
+        for col in df.columns:
+            if row[col] != dfCheck[col].iloc[0]:
+                checker = 1
+        if checker == 1:
+            list.append("Change")
+        else: 
+            print('tudo igual')
+            list.append('false')
+
+#filtra as linhas que vão ser upadas e as que vão ser alteradas
 dfAPI['show'] = list
 dfAPI = dfAPI[dfAPI['show'] == 'True']
+dfChange = dfAPI[dfAPI['show'] == 'Change']
 dfAPI = dfAPI.drop(columns=['show'])
 
 
