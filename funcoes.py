@@ -8,6 +8,18 @@ import time #biblioteca que usa pra poder esperar o danado do minuto
 #cria a api do request
 api_url = f'https://www.ctasmart.com.br:8443/SvWebSincronizaAbastecimentos?token={token}&formato=json'
 
+def SimpleCommand(comand):
+    conn = psycopg2.connect(database = database,
+                    user = user,
+                    host = host,
+                    password = passwd,
+                    port = port)
+    cur = conn.cursor()
+    cur.execute(comand)
+    cur.close()
+    conn.commit()
+    conn.close()
+
 
 def GetDataApi(api_url):
     '''
@@ -21,8 +33,6 @@ def GetDataApi(api_url):
     df_final2 = pd.json_normalize(data['abastecimentos'])
     df_final2.to_csv('temp/file.csv')
     return df_final2
-
-
 
 
 def UparAuxiliares(df):
@@ -165,7 +175,6 @@ def UparLancamentos(df):
         #remove as colunas que tem a palavra-chave das colunas usaveis exceto a que tem o id
         for i in colunas:
             if key in i and '.id' not in i:
-                print(i)
                 colunasUsaveis.remove(i)
     #remove as colunas que são lixo
     for i in colunasUsaveis:
@@ -178,8 +187,12 @@ def UparLancamentos(df):
 
     #formata as colnas direitinho pra upar pro banco de dados
     for name in names:
+        if name == 'combustivel.id':
+            df[name] = df[name].astype(str).replace('2','2.0')
+            df[name] = df[name].astype(str).replace('3','3.0')   
+        if 'id' in name:
+            continue
         if 'data' in name:
-            print(name)
             df[name] = pd.to_datetime(df[name], dayfirst=True, errors='raise')
         else:
             try:
@@ -187,7 +200,7 @@ def UparLancamentos(df):
                 df[name] = df[name].str.replace(',','.')
                 df[name] = pd.to_numeric(df[name])
             except:
-                print(name)
+                pass
 
 
     #cria um comando pra cada linha e upa elas no banco de dados
@@ -217,10 +230,7 @@ def UparLancamentos(df):
         print('feito')
     conn.commit()
     conn.close()
-            
-            
-#deixo essas linhas aqui pra caso quiser fazer testes com um csv sem ter que puxar tudo de novo da API
-#df = pd.read_csv(r'temp\file.csv')
+        
 
 def PuxarTudo(api_url, GetDataApi):
     """
@@ -283,10 +293,65 @@ def PuxarTudo(api_url, GetDataApi):
     return df_up
 
 
+def LerTabelaBancoDados(name):
+    conn = psycopg2.connect(database = database,
+                    user = user,
+                    host = host,
+                    password = passwd,
+                    port = port)  
+    cur = conn.cursor()
+    cur.execute(f'SELECT * FROM public.{name}')
+    colunas = []
+    for item in cur.description:
+        colunas.append(item[0])
+    dados = cur.fetchall()
+    df = pd.DataFrame(dados, columns = colunas)
+    cur.close()
+    conn.close()
+    return(df)
+
+def ListarTabelas():
+    conn = psycopg2.connect(database = database,
+                user = user,
+                host = host,
+                password = passwd,
+                port = port)  
+    cur = conn.cursor()
+    cur.execute("select relname from pg_class where relkind='r' and relname !~ '^(pg_|sql_)';")
+    list = cur.fetchall()
+    tabelas = []
+    for i in list:
+        tabelas.append(i[0])
+    return(tabelas)
 
 
-
-
-
-
-
+def ComandosDict(dictTable):
+    listaComandos = []
+    for key, item in dictTable.items():
+        key = key.replace('df','').lower()
+        id = f'{key}.id'
+        item = item[item[id] != 0]
+        item = item.dropna(subset=[id])
+        for i, r in item.iterrows():
+            command = f'INSERT INTO public.{key}('
+            names = item.columns
+            namesPython = []
+            c = 0
+            for name in names:
+                c += 1
+                name = name.replace(f'{key}.','')
+                if c < len(names):
+                    command += f'"{name}",'
+                else:
+                    command += f'"{name}") '
+                namesPython.append(f'{key}.{name}')
+            command += 'VALUES ('
+            c = 0
+            for name in namesPython:
+                c += 1
+                if c < len(namesPython):
+                    command += f"'{r[name]}',"
+                else:
+                    command += f"'{r[name]}')"
+            listaComandos.append(command)
+            return(listaComandos)
