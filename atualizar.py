@@ -3,6 +3,7 @@ from datetime import datetime, timedelta #importa a biblioteca de trabalhar com 
 import pandas as pd
 
 
+
 #lê todas as tabelas que já estão no banco de dados e armazena no dicionario
 dictBancoDados = {}
 tabelas = funcoes.ListarTabelas()
@@ -31,7 +32,7 @@ url += f'&data_inicio={ontem}'
 #puxa as tabelas da API
 dictAPI = {}
 print('Lendo API')
-dfAPI = funcoes.GetDataApi(url)
+dfAPI = funcoes.PuxarTudo(url, funcoes.GetDataApi)
 print('API lida')
 #dfAPI = pd.read_csv('temp/file.csv')
 dfAPI = dfAPI[dfAPI['data_inicio'] == ontem]
