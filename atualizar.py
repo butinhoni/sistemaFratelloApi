@@ -31,7 +31,7 @@ url += f'&data_inicio={ontem}'
 #puxa as tabelas da API
 dictAPI = {}
 print('Lendo API')
-dfAPI = funcoes.GetDataApi(url)
+dfAPI = funcoes.PuxarTudo(url,funcoes.GetDataApi)
 print('API lida')
 #dfAPI = pd.read_csv('temp/file.csv')
 dfAPI = dfAPI[dfAPI['data_inicio'] == ontem]
@@ -79,10 +79,15 @@ comandos = funcoes.ComandosDict(linhas)
 print('Dados Tratados e Comandos Gerados')
 
 #roda os comandos no banco de dados
-for comando in comandos:
-    print(comando)
-    funcoes.SimpleCommand(comando)
-print('Tabelas Auxiliares Upadas')
+try:
+    for comando in comandos:
+        print(comando)
+        funcoes.SimpleCommand(comando)
+    print('Tabelas Auxiliares Upadas')
+except TypeError:
+    print('Não Existem valores para ser adicionados nas tabelas auxiliares, indo pra proxima')
+except:
+    print('deu algum erro no comando das auxiliares, da um confere la')
 
 
 #trata a tabela principal e tira as duplicatas
@@ -114,3 +119,8 @@ dfAPI = dfAPI.drop(columns=['show'])
 #upa a tabela principal
 funcoes.UparLancamentos(dfAPI)
 print('Feito')
+
+#faz as atualizações das que mudaram:
+mudadas = dfChange['id'].to_list()
+funcoes.deleteLinhas('lancamentos',mudadas)
+funcoes.UparLancamentos(dfChange)

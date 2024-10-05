@@ -3,6 +3,7 @@ import pandas as pd #importa o pandas pra tratar os dados
 import psycopg2 #importa a biblioteca que faz a ligação com o PostgreSQL
 from segredos import passwd, database, user, host, port, token #importa os dados sensíveis que não podem ser upados no github
 import time #biblioteca que usa pra poder esperar o danado do minuto
+from datetime import datetime
 
 
 #cria a api do request
@@ -242,17 +243,23 @@ def PuxarTudo(api_url, GetDataApi):
     df = GetDataApi(api_url)
 
     #ajusta as coisas e pega a data do ultimo lançamento que veio no sistema
-    df['data_inicio'] = pd.to_datetime(df['data_inicio'])
+    df['data_inicio'] = pd.to_datetime(df['data_inicio'], dayfirst=True)
     last = df['data_inicio'].max()
     last_f = last.strftime('%d/%m/%Y')
-    hoje = pd.to_datetime('01/10/2024', dayfirst = True)
+    hoje = datetime.today()
+    hoje = pd.to_datetime(hoje)
+    lastA = 0
 
 
     #lista vazia pra armazenar as tabelas e um contador pra ir salvando em pdf também
     lista = []
     count = 0
     #enquanto a data do ultimo lançamento for anterior a hoje
-    while last < hoje:
+    while last <= hoje:
+        #checa se teve atualização na lista
+        if last == lastA:
+            break
+        lastA = last
         #espera um minuto (limitação da api)
         print('Esperando um minuto')
         count += 1
@@ -291,6 +298,7 @@ def PuxarTudo(api_url, GetDataApi):
     df_up = pd.concat(lista)
     df_up = df_up.drop_duplicates()
     return df_up
+    
 
 
 def LerTabelaBancoDados(name):
@@ -357,3 +365,20 @@ def ComandosDict(dictTable):
                     command += f"'{r[name]}')"
             listaComandos.append(command)
             return(listaComandos)
+
+def deleteLinhas(tabela, ids):
+    conn = psycopg2.connect(database = database,
+                    user = user,
+                    host = host,
+                    password = passwd,
+                    port = port)  
+    cur = conn.cursor()
+    for id in ids:
+        cur.execute(f'''
+                    DELETE FROM public.{tabela}
+                    WHERE "id" = '{id}' 
+                    ''')
+        print(f'{id} deletado')
+    cur.close()
+    conn.commit()
+    conn.close()
