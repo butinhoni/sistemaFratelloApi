@@ -255,7 +255,7 @@ def PuxarTudo(api_url, GetDataApi):
     lista = []
     count = 0
     #enquanto a data do ultimo lançamento for anterior a hoje
-    while last <= hoje:
+    while last < hoje:
         #checa se teve atualização na lista
         if last == lastA:
             break
@@ -364,7 +364,7 @@ def ComandosDict(dictTable):
                 else:
                     command += f"'{r[name]}')"
             listaComandos.append(command)
-            return(listaComandos)
+    return(listaComandos)
 
 def deleteLinhas(tabela, ids):
     conn = psycopg2.connect(database = database,
