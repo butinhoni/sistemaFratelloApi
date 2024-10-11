@@ -188,9 +188,9 @@ def UparLancamentos(df):
 
     #formata as colnas direitinho pra upar pro banco de dados
     for name in names:
-        if name == 'combustivel.id':
-            df[name] = df[name].astype(str).replace('2','2.0')
-            df[name] = df[name].astype(str).replace('3','3.0')   
+        #if name == 'combustivel.id':
+            #df[name] = df[name].astype(str).replace('2','2')
+            #df[name] = df[name].astype(str).replace('3','3.0')   
         if 'id' in name:
             continue
         if 'data' in name:
