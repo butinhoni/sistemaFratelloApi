@@ -32,7 +32,7 @@ def GetDataApi(api_url):
 
     #trata os dados da api
     df_final2 = pd.json_normalize(data['abastecimentos'])
-    df_final2.to_csv('temp/file.csv')
+    #df_final2.to_csv('temp/file.csv')
     return df_final2
 
 
@@ -279,7 +279,7 @@ def PuxarTudo(api_url, GetDataApi):
         
         #junta o resultado na lista e salva em csv também
         lista.append(df)
-        df.to_csv(f'temp/{count}.csv')
+        #df.to_csv(f'temp/{count}.csv')
 
         #pega de novo a ultima data que tem
         try:
@@ -291,7 +291,7 @@ def PuxarTudo(api_url, GetDataApi):
             print('erro tratando a tabela')
             print(df)
             lista.append(df)
-            df.to_csv(f'temp/{count}.csv')
+            #df.to_csv(f'temp/{count}.csv')
             break
     
     #junta todas as tabelas e retorna uma só
