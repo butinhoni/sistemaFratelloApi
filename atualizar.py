@@ -35,7 +35,7 @@ print('Lendo API')
 dfAPI = funcoes.PuxarTudo(url, funcoes.GetDataApi)
 print('API lida')
 #dfAPI = pd.read_csv('temp/file.csv')
-dfAPI = dfAPI[dfAPI['data_inicio'] == ontem]
+#dfAPI = dfAPI[dfAPI['data_inicio'] == ontem]
 listaGeral = []
 
 #separa as subtabelas que vieram da api

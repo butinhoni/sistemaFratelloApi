@@ -253,6 +253,7 @@ def PuxarTudo(api_url, GetDataApi):
 
     #lista vazia pra armazenar as tabelas e um contador pra ir salvando em pdf também
     lista = []
+    lista.append(df)
     count = 0
     #enquanto a data do ultimo lançamento for anterior a hoje
     while last < hoje:
