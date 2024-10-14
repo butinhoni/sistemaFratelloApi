@@ -58,7 +58,7 @@ linhas = {}
 for key, item in dictAPI.items():
     print(key)
     show = []
-    df.to_csv(f'temp/{key}.csv')
+    #df.to_csv(f'temp/{key}.csv')
     ids = dictBancoDados[key]['id'].unique()
     ids = [str(x).strip() for x in ids]
     with open (f'temp/{key}.txt','w') as file:
