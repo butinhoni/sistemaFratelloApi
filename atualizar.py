@@ -34,8 +34,6 @@ dictAPI = {}
 print('Lendo API')
 dfAPI = funcoes.PuxarTudo(url, funcoes.GetDataApi)
 print('API lida')
-#dfAPI = pd.read_csv('temp/file.csv')
-#dfAPI = dfAPI[dfAPI['data_inicio'] == ontem]
 listaGeral = []
 
 #separa as subtabelas que vieram da api
@@ -58,11 +56,8 @@ linhas = {}
 for key, item in dictAPI.items():
     print(key)
     show = []
-    #df.to_csv(f'temp/{key}.csv')
     ids = dictBancoDados[key]['id'].unique()
     ids = [str(x).strip() for x in ids]
-    with open (f'temp/{key}.txt','w') as file:
-        file.write(str(ids))
     for i, row in item.iterrows():
         if str(row[f'{key}.id']) not in ids:
             print(f'ID não encontrado {key} - {row[f"{key}.id"]}')
