@@ -8,6 +8,8 @@ import pandas as pd
 dictBancoDados = {}
 tabelas = funcoes.ListarTabelas()
 for tabela in tabelas:
+    if 'planilhaRDM' in tabela:
+        continue
     dictBancoDados[tabela] = funcoes.LerTabelaBancoDados(tabela)
     print(f'{tabela} Lida')
 
