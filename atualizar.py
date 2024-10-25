@@ -1,6 +1,8 @@
 import funcoes #importa o arquivo com as funções
 from datetime import datetime, timedelta #importa a biblioteca de trabalhar com data
 import pandas as pd
+from modo import tempo_atras
+
 
 
 
@@ -22,10 +24,14 @@ dictUparBancoDados = {}
 '''
 aqui vou puxar os dados do sistema
 '''
+
+
 #pega a data de ontem
 hoje = datetime.now()
-ontem = hoje - timedelta(days=30)
+ontem = hoje - timedelta(days=tempo_atras)
 ontem = ontem.strftime('%d/%m/%Y')
+
+
 
 #monta a url
 url = funcoes.api_url
@@ -94,6 +100,8 @@ for i, row in dfAPI.iterrows():
     else:
         checker = 0
         for col in df.columns:
+            if 'erro' in col:
+                continue
             if row[col] != dfCheck[col].iloc[0]:
                 checker = 1
         if checker == 1:

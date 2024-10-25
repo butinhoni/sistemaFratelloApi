@@ -50,6 +50,9 @@ def UparAuxiliares(df):
 
     #leio todas as colunas da tabela cheia e normalizada
     colunas = df.columns
+    for coluna in colunas:
+        if 'erro' in coluna:
+            colunas.remove(coluna)
 
     #crio uma lista pra cada uma das tabelas que quero criar, pra armazenas as colunas de cada uma
 
@@ -105,6 +108,9 @@ def UparAuxiliares(df):
         for i, r in item.iterrows():
             command = f'INSERT INTO public.{key}('
             names = item.columns
+            for name in names:
+                if 'erro' in name:
+                    names.remove(name)
             namesPython = []
             c = 0
             for name in names:
@@ -144,6 +150,9 @@ def UparLancamentos(df):
 
 
     colunas = df.columns
+    for coluna in colunas:
+        if 'erro' in coluna:
+            colunas.remove(coluna)
 
     #olhando agora muito provavelmente essas listas não precisam existir e o dicionario poderia ser uma lista
     #vou deixar esse comentário pra ajeitar quando tiver tempo
@@ -185,6 +194,9 @@ def UparLancamentos(df):
     #filtra o dataframe pra usar só as colunas selecionadas
     df = df[colunasPraUsar]
     names = df.columns
+    for name in names:
+        if 'erro' in name:
+            names.remove(name)
 
     #formata as colnas direitinho pra upar pro banco de dados
     for name in names:
@@ -346,6 +358,9 @@ def ComandosDict(dictTable):
         for i, r in item.iterrows():
             command = f'INSERT INTO public.{key}('
             names = item.columns
+            for name in names:
+                if 'erro' in name:
+                    names.remove(name)
             namesPython = []
             c = 0
             for name in names:
