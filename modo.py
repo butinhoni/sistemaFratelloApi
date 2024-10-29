@@ -1,1 +1,1 @@
-tempo_atras = 2
+tempo_atras = 365

@@ -116,7 +116,10 @@ dfAPI = dfAPI[dfAPI['show'] == 'True']
 dfChange = dfAPI[dfAPI['show'] == 'Change']
 dfAPI = dfAPI.drop(columns=['show'])
 
+for i, row in dfChange.iterrows():
+    funcoes.deleteLinhas('lancamentos',row['id'])
 
 #upa a tabela principal
+funcoes.UparLancamentos(dfChange)
 funcoes.UparLancamentos(dfAPI)
 print('Feito')
