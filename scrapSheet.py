@@ -37,7 +37,8 @@ def upfile(pastas, planilha):
     df = df[colunas]
     df.columns = ['numero', 'causa', 'obs', 'data']
     df['data'] = pd.to_datetime(df['data'], errors = 'coerce', dayfirst=True)
-    
+    df['obra'] = planilha
+    print(df)
     
 
     # Remove linhas onde 'Nº de Frota' ou 'Data' estão vazias
