@@ -88,5 +88,4 @@ for sheet in sheets:
     comandos = (gerarComandos(df))
     for comm in comandos:
         SimpleCommand(comm)
-        print(f'{comm} - FEITO')
     print(f'{sheet.title} - UPADA')

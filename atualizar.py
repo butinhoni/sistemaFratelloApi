@@ -56,19 +56,20 @@ for key, item in dictBancoDados.items():
             listaGeral.append(coluna)
     df2 = dfAPI[list]
     df2 = df2.drop_duplicates()
+    df2.to_csv(f'temp/{key}.csv') #deleta essa merda antes de upar pro git
     dictAPI[key] = df2
 
 
 #checa se as subtabelas tem todos os ids que vieram no lançamento e salva as que precisa adicionar
 linhas = {}
 for key, item in dictAPI.items():
-    print(key)
     show = []
     ids = dictBancoDados[key]['id'].unique()
     ids = [str(x).strip() for x in ids]
     for i, row in item.iterrows():
-        if str(row[f'{key}.id']) not in ids:
-            print(f'ID não encontrado {key} - {row[f"{key}.id"]}')
+        idAPI = row[f'{key}.id']
+        if str(idAPI) not in ids:
+            print(f'ID não encontrado {key} - {idAPI}')
             show.append('True')
         else:
             show.append('False')
@@ -78,13 +79,57 @@ for key, item in dictAPI.items():
     item = item.drop(columns = ['show'])
     linhas[f'df{key.capitalize()}'] = item
 
-#gera os comandos pras tabelas que precisam
+#procura por alterações nas tabelas auxiliares
+globalChecker = 0
+linhasChange = {}
+for key, item in dictAPI.items():
+    show = []
+    if key == 'lancamentos':
+        continue
+    print(f'Procurando atualizações - {key}')
+    dfBD = dictBancoDados[key]
+    ids = dfBD['id'].unique()
+    dfBD = dfBD.set_index('id')
+    dfAPI2 = item
+    print(dfAPI2)
+    item['show'] = ''
+    df_mudar = []
+    for numero in ids:
+        checker = 0
+        dfAPI3 = dfAPI2[dfAPI2[f'{key}.id'] == numero]
+        print(dfAPI3)
+        try:
+            row = dfAPI3.iloc[-1]
+        except:
+            continue
+        for coluna in dfBD.columns:
+            dadoBD = dfBD.loc[numero, coluna]
+            dadoAPI = row[f'{key}.{coluna}']
+            if dadoAPI != dadoBD:
+                checker = 1
+                globalChecker = 1
+                print(f'Alteração na {coluna} da tabela {key}, no id {numero}, no item {dadoBD}, substituido por {dadoAPI}')
+        if checker > 0:
+            df_mudar.append(row)
+    dfLancar = pd.concat(df_mudar)
+    dfLancar = dfLancar.drop(columns = ['show'])
+    print(dfLancar)
+    dfLancar = dfLancar.dropna(thresh = 3)
+    print('tabela final')
+    print(dfLancar)
+    linhasChange[f'df{key.capitalize()}'] = item
+
+exit()
+#deleta do banco de dados as linhas com informações antigas das tabelas auxiliares
+if globalChecker > 0:
+    funcoes.updateTable(linhasChange)
+
+#gera os comandos pras tabelas que precisam de linhas inseridas
 comandos = funcoes.ComandosDict(linhas)
 print('Dados Tratados e Comandos Gerados')
 
-#roda os comandos no banco de dados
+#roda os comandos no banco de dados pra inserir as linhas 
 for comando in comandos:
-    print(comando)
     funcoes.SimpleCommand(comando)
 print('Tabelas Auxiliares Upadas')
 

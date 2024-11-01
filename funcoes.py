@@ -236,7 +236,6 @@ def UparLancamentos(df):
             else:
                 command += ') '
             c+=1
-        print(command)
         cur = conn.cursor()
         cur.execute(command)
         cur.close()
@@ -380,6 +379,7 @@ def ComandosDict(dictTable):
                 else:
                     command += f"'{r[name]}')"
             listaComandos.append(command)
+            print(command)
     return(listaComandos)
 
 def deleteLinhas(tabela, ids):
@@ -398,3 +398,38 @@ def deleteLinhas(tabela, ids):
     cur.close()
     conn.commit()
     conn.close()
+
+def updateTable (dict):
+    comandos = []
+    for key, item in dict.items():
+        key = key.replace('df','').lower()
+        conn = psycopg2.connect(database = database,
+                        user = user,
+                        host = host,
+                        password = passwd,
+                        port = port)  
+        cur = conn.cursor()
+        cur.execute(f'SELECT * FROM public.{key}')
+        colunas = []
+        for tabela in cur.description:
+            colunas.append(tabela[0])
+        colunas.remove('id')
+        for i, row in item.iterrows():
+            command = f'UPDATE public."{key}" SET' 
+            count = 0
+            for coluna in colunas:
+                count += 1
+                dado = row[f'{key}.{coluna}']
+                command += f'''
+                    {coluna}" = '{dado}' '''
+                if count < len(colunas):
+                    command += ','
+            command += f'''
+                WHERE "id" = '{i}' '''
+            cur.execute(command)
+        conn.commit()
+        conn.close()
+
+            
+
+        
