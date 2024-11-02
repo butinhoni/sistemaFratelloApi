@@ -403,6 +403,7 @@ def updateTable (dict):
     comandos = []
     for key, item in dict.items():
         key = key.replace('df','').lower()
+        
         conn = psycopg2.connect(database = database,
                         user = user,
                         host = host,
@@ -415,18 +416,25 @@ def updateTable (dict):
             colunas.append(tabela[0])
         colunas.remove('id')
         for i, row in item.iterrows():
+            id_linha = row[f'{key}.id']
             command = f'UPDATE public."{key}" SET' 
             count = 0
             for coluna in colunas:
                 count += 1
                 dado = row[f'{key}.{coluna}']
+                if dado == '':
+                    continue
                 command += f'''
-                    {coluna}" = '{dado}' '''
+                    "{coluna}" = '{dado}' '''
                 if count < len(colunas):
                     command += ','
-            command += f'''
-                WHERE "id" = '{i}' '''
-            cur.execute(command)
+            command += f'''WHERE "id" = '{id_linha}' '''
+            command = command.replace(',WHERE', ' WHERE')
+            try:
+                cur.execute(command)
+            except:
+                print(command)
+                exit()
         conn.commit()
         conn.close()
 

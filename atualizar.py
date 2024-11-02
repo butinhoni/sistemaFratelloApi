@@ -91,13 +91,11 @@ for key, item in dictAPI.items():
     ids = dfBD['id'].unique()
     dfBD = dfBD.set_index('id')
     dfAPI2 = item
-    print(dfAPI2)
     item['show'] = ''
     df_mudar = []
     for numero in ids:
         checker = 0
         dfAPI3 = dfAPI2[dfAPI2[f'{key}.id'] == numero]
-        print(dfAPI3)
         try:
             row = dfAPI3.iloc[-1]
         except:
@@ -108,9 +106,13 @@ for key, item in dictAPI.items():
             if dadoAPI != dadoBD:
                 checker = 1
                 globalChecker = 1
-                print(f'Alteração na {coluna} da tabela {key}, no id {numero}, no item {dadoBD}, substituido por {dadoAPI}')
         if checker > 0:
+            row = pd.DataFrame(row)
+            row = row.transpose()
+            print(row)
             df_mudar.append(row)
+    if len(df_mudar) == 0:
+        continue
     dfLancar = pd.concat(df_mudar)
     dfLancar = dfLancar.drop(columns = ['show'])
     print(dfLancar)
@@ -119,8 +121,7 @@ for key, item in dictAPI.items():
     print(dfLancar)
     linhasChange[f'df{key.capitalize()}'] = item
 
-exit()
-#deleta do banco de dados as linhas com informações antigas das tabelas auxiliares
+#atualiza as auxiliares
 if globalChecker > 0:
     funcoes.updateTable(linhasChange)
 
