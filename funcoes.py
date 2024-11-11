@@ -400,7 +400,7 @@ def deleteLinhas(tabela, ids):
     conn.close()
 
 def updateTable (dict):
-    comandos = []
+    print(dict['veiculo']['610974386'])
     for key, item in dict.items():
         key = key.replace('df','').lower()
         
@@ -410,31 +410,18 @@ def updateTable (dict):
                         password = passwd,
                         port = port)  
         cur = conn.cursor()
-        cur.execute(f'SELECT * FROM public.{key}')
-        colunas = []
-        for tabela in cur.description:
-            colunas.append(tabela[0])
-        colunas.remove('id')
-        for i, row in item.iterrows():
-            id_linha = row[f'{key}.id']
-            command = f'UPDATE public."{key}" SET' 
-            count = 0
-            for coluna in colunas:
-                count += 1
-                dado = row[f'{key}.{coluna}']
-                if dado == '':
-                    continue
-                command += f'''
-                    "{coluna}" = '{dado}' '''
-                if count < len(colunas):
-                    command += ','
-            command += f'''WHERE "id" = '{id_linha}' '''
-            command = command.replace(',WHERE', ' WHERE')
-            try:
-                cur.execute(command)
-            except:
-                print(command)
-                exit()
+        for tabela, linhas in dict.items():
+            for linha, dados in linhas.items():
+                for dado in dados:
+                    for key in dado:
+                        if dado[key] == '':
+                            print('vazio')
+                        else:   
+                            cur.execute(f''' UPDATE public."{tabela}"
+                                        SET  "{key}" = '{dado[key]}' 
+                                        WHERE "id" = '{linha}' ''')
+                            #print(f'{key} do item {linha} da tabela {tabela} alterado para {dado[key]}')
+
         conn.commit()
         conn.close()
 

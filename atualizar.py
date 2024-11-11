@@ -80,10 +80,9 @@ for key, item in dictAPI.items():
     linhas[f'df{key.capitalize()}'] = item
 
 #procura por alterações nas tabelas auxiliares
-globalChecker = 0
-linhasChange = {}
+globalChecker = 1
+dadosChange = {}
 for key, item in dictAPI.items():
-    show = []
     if key == 'lancamentos':
         continue
     print(f'Procurando atualizações - {key}')
@@ -91,10 +90,10 @@ for key, item in dictAPI.items():
     ids = dfBD['id'].unique()
     dfBD = dfBD.set_index('id')
     dfAPI2 = item
-    item['show'] = ''
     df_mudar = []
+    dictDadosLinha = {}
     for numero in ids:
-        checker = 0
+        dadosChangeLinha = []
         dfAPI3 = dfAPI2[dfAPI2[f'{key}.id'] == numero]
         try:
             row = dfAPI3.iloc[-1]
@@ -104,26 +103,15 @@ for key, item in dictAPI.items():
             dadoBD = dfBD.loc[numero, coluna]
             dadoAPI = row[f'{key}.{coluna}']
             if dadoAPI != dadoBD:
-                checker = 1
-                globalChecker = 1
-        if checker > 0:
-            row = pd.DataFrame(row)
-            row = row.transpose()
-            print(row)
-            df_mudar.append(row)
-    if len(df_mudar) == 0:
-        continue
-    dfLancar = pd.concat(df_mudar)
-    dfLancar = dfLancar.drop(columns = ['show'])
-    print(dfLancar)
-    dfLancar = dfLancar.dropna(thresh = 3)
-    print('tabela final')
-    print(dfLancar)
-    linhasChange[f'df{key.capitalize()}'] = item
+                dadosChangeLinha.append ({coluna: dadoAPI})
+        dictDadosLinha[numero] = dadosChangeLinha
+        if numero == '610974386':
+            print(dictDadosLinha)
+    dadosChange[key] = dictDadosLinha
 
 #atualiza as auxiliares
 if globalChecker > 0:
-    funcoes.updateTable(linhasChange)
+    funcoes.updateTable(dadosChange)
 
 #gera os comandos pras tabelas que precisam de linhas inseridas
 comandos = funcoes.ComandosDict(linhas)
