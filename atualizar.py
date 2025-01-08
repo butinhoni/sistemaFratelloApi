@@ -2,7 +2,8 @@ import funcoes #importa o arquivo com as funções
 from datetime import datetime, timedelta #importa a biblioteca de trabalhar com data
 import pandas as pd
 from modo import tempo_atras
-
+from sendmail import sendmail
+from segredos import sender, login, senha_mail
 
 
 
@@ -156,4 +157,7 @@ for i, row in dfChange.iterrows():
 #upa a tabela principal
 funcoes.UparLancamentos(dfChange)
 funcoes.UparLancamentos(dfAPI)
+mensagem = 'Fala amigão, deu tudo certo aqui com a atualização da fratello.'
+sendmail(sender,login,senha_mail,mensagem)
+
 print('Feito')
