@@ -400,7 +400,6 @@ def deleteLinhas(tabela, ids):
     conn.close()
 
 def updateTable (dict):
-    print(dict['veiculo']['610974386'])
     for key, item in dict.items():
         key = key.replace('df','').lower()
         

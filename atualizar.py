@@ -157,7 +157,6 @@ for i, row in dfChange.iterrows():
 #upa a tabela principal
 funcoes.UparLancamentos(dfChange)
 funcoes.UparLancamentos(dfAPI)
-mensagem = 'Fala amigão, deu tudo certo aqui com a atualização da fratello.'
-sendmail(sender,login,senha_mail,mensagem)
+
 
 print('Feito')
