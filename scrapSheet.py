@@ -65,11 +65,15 @@ def gerarComandos(df):
         command += 'VALUES ('
         c = 0
         for name in names:
+            if isinstance(row[name], str):
+                valor = row[name].replace("'", '')
+            else:
+                valor = row[name]
             c += 1
             if c < len(names):
-                command += f"'{row[name]}',"
+                command += f"'{valor}',"
             else:
-                command += f"'{row[name]}')"
+                command += f"'{valor}')"
         com.append(command)
     return(com)
 
