@@ -400,15 +400,16 @@ def deleteLinhas(tabela, ids):
     conn.close()
 
 def updateTable (dict):
+    conn = psycopg2.connect(database = database,
+                    user = user,
+                    host = host,
+                    password = passwd,
+                    port = port)  
+    cur = conn.cursor()
     for key, item in dict.items():
         key = key.replace('df','').lower()
         
-        conn = psycopg2.connect(database = database,
-                        user = user,
-                        host = host,
-                        password = passwd,
-                        port = port)  
-        cur = conn.cursor()
+
         for tabela, linhas in dict.items():
             for linha, dados in linhas.items():
                 for dado in dados:
@@ -421,8 +422,8 @@ def updateTable (dict):
                                         WHERE "id" = '{linha}' ''')
                             #print(f'{key} do item {linha} da tabela {tabela} alterado para {dado[key]}')
 
-        conn.commit()
-        conn.close()
+    conn.commit()
+    conn.close()
 
             
 
