@@ -41,7 +41,7 @@ def sendmail(sender, login, senha, mensagem):
     msg['Subject'] = 'Busca Completa na API'
     msg['From'] = sender
     msg['To'] = email
-    with smtplib.SMTP('smtp-mail.outlook.com', 587) as smtp_server:
+    with smtplib.SMTP('smtp.mailgun.org', 587) as smtp_server:
         smtp_server.starttls()
         smtp_server.login(login,senha)
         smtp_server.sendmail(sender,email.split(","),msg.as_string())
