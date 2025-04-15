@@ -1,1 +1,1 @@
-tempo_atras = 1
+tempo_atras = 10

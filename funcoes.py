@@ -154,6 +154,7 @@ def UparLancamentos(df):
         if 'erro' in coluna:
             colunas.remove(coluna)
 
+
     #olhando agora muito provavelmente essas listas não precisam existir e o dicionario poderia ser uma lista
     #vou deixar esse comentário pra ajeitar quando tiver tempo
     postos = []
@@ -187,8 +188,12 @@ def UparLancamentos(df):
             if key in i and '.id' not in i:
                 colunasUsaveis.remove(i)
     #remove as colunas que são lixo
+    colunasLixo = ['extra', 'Unnamed', 'telemetria']
     for i in colunasUsaveis:
-        if 'extra' not in i and 'Unnamed' not in i:
+        conditions = []
+        for chave in colunasLixo:
+            conditions.append(chave in i)
+        if not any(conditions):
             colunasPraUsar.append(i)
 
     #filtra o dataframe pra usar só as colunas selecionadas
@@ -267,7 +272,9 @@ def PuxarTudo(api_url, GetDataApi):
     lista.append(df)
     count = 0
     #enquanto a data do ultimo lançamento for anterior a hoje
-    while last < hoje:
+    print(f'ultima que pegou: {last}')
+    print(f'data atual: {hoje}')
+    while last.date() < hoje.date():
         #checa se teve atualização na lista
         if last == lastA:
             break
