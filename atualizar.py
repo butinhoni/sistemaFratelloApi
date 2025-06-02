@@ -4,6 +4,10 @@ import pandas as pd
 from modo import tempo_atras
 from sendmail import sendmail
 from segredos import sender, login, senha_mail
+import logging
+from logging_config import configurar_logging
+
+configurar_logging('logs/atualizar.log')
 
 
 def atualizar():
@@ -86,7 +90,7 @@ def atualizar():
     for key, item in dictAPI.items():
         if key == 'lancamentos':
             continue
-        print(f'Procurando atualizações - {key}')
+        logging.info(f'Procurando atualizações - {key}')
         dfBD = dictBancoDados[key]
         ids = dfBD['id'].unique()
         dfBD = dfBD.set_index('id')
@@ -103,11 +107,17 @@ def atualizar():
             for coluna in dfBD.columns:
                 dadoBD = dfBD.loc[numero, coluna]
                 dadoAPI = row[f'{key}.{coluna}']
-                if dadoAPI != dadoBD:
+                if isinstance(dadoAPI, str):
+                    dadoAPI = dadoAPI.lower()
+                    dadoBD = str(dadoBD).lower()
+                else:
+                    dadoAPI = int(dadoAPI)
+                    dadoBD = int(dadoBD)
+                if dadoAPI != dadoBD and dadoAPI != '':
+                    logging.info(f'alteração de {coluna} encontrada na linha {numero}')
                     dadosChangeLinha.append ({coluna: dadoAPI})
-            dictDadosLinha[numero] = dadosChangeLinha
-            if numero == '610974386':
-                print(dictDadosLinha)
+            if dadosChangeLinha:
+                dictDadosLinha[numero] = dadosChangeLinha
         dadosChange[key] = dictDadosLinha
 
     #atualiza as auxiliares
@@ -116,12 +126,12 @@ def atualizar():
 
     #gera os comandos pras tabelas que precisam de linhas inseridas
     comandos = funcoes.ComandosDict(linhas)
-    print('Dados Tratados e Comandos Gerados')
+    logging.info('Dados tratados e comandos gerados')
 
     #roda os comandos no banco de dados pra inserir as linhas 
     for comando in comandos:
         funcoes.SimpleCommand(comando)
-    print('Tabelas Auxiliares Upadas')
+    logging.info('tabelas upadas')
 
 
     #trata a tabela principal e tira as duplicatas
@@ -160,3 +170,5 @@ def atualizar():
 
 
     print('Feito')
+
+atualizar()

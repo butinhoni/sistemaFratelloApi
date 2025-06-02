@@ -4,6 +4,10 @@ import psycopg2 #importa a biblioteca que faz a ligação com o PostgreSQL
 from segredos import passwd, database, user, host, port, token #importa os dados sensíveis que não podem ser upados no github
 import time #biblioteca que usa pra poder esperar o danado do minuto
 from datetime import datetime
+import logging
+from logging_config import configurar_logging
+
+configurar_logging('logs/funcoes_gerais.log')
 
 
 #cria a api do request
@@ -188,7 +192,7 @@ def UparLancamentos(df):
             if key in i and '.id' not in i:
                 colunasUsaveis.remove(i)
     #remove as colunas que são lixo
-    colunasLixo = ['extra', 'Unnamed', 'telemetria']
+    colunasLixo = ['extra', 'Unnamed', 'telemetria', 'ordem_abastecimento']
     for i in colunasUsaveis:
         conditions = []
         for chave in colunasLixo:
@@ -244,7 +248,6 @@ def UparLancamentos(df):
         cur = conn.cursor()
         cur.execute(command)
         cur.close()
-        print('feito')
     conn.commit()
     conn.close()
         
@@ -406,26 +409,29 @@ def deleteLinhas(tabela, ids):
     conn.commit()
     conn.close()
 
-def updateTable (dict):
+def updateTable (d1):
+    d2 = {k: v for k, v in d1.items() if v}
+    logging.debug(f'dicionario = {d2}')
     conn = psycopg2.connect(database = database,
                     user = user,
                     host = host,
                     password = passwd,
                     port = port)  
     cur = conn.cursor()
-    for key, item in dict.items():
+    for key, item in d2.items():
         key = key.replace('df','').lower()
-        
-
-        for tabela, linhas in dict.items():
+        for tabela, linhas in d2.items():
+            logging.info(f'linhas = {linhas}')
             for linha, dados in linhas.items():
                 for dado in dados:
-                    for key in dado:
-                        if dado[key] == '':
-                            print('vazio')
+                    logging.debug(f'linha = {linha} - alteração: {dado}')
+                    d3 = {k: v for k,v in dado.items() if v !=''}
+                    for key in d3:
+                        if d3[key] == '':
+                            logging.info(f'informação de {key} está vazia')
                         else:   
                             cur.execute(f''' UPDATE public."{tabela}"
-                                        SET  "{key}" = '{dado[key]}' 
+                                        SET  "{key}" = '{d3[key]}' 
                                         WHERE "id" = '{linha}' ''')
                             #print(f'{key} do item {linha} da tabela {tabela} alterado para {dado[key]}')
 
