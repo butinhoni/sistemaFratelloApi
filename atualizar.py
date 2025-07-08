@@ -7,7 +7,7 @@ from segredos import sender, login, senha_mail
 import logging
 from logging_config import configurar_logging
 
-configurar_logging('logs/atualizar.log')
+configurar_logging(r'logs/atualizar.log')
 
 
 def atualizar():

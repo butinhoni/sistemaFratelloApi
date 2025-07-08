@@ -38,7 +38,7 @@ def sendmail(sender, login, senha, mensagem):
     email = 'guilherme.of.fernandes@gmail.com'
     
     #ENVIAR EMAIL
-    msg['Subject'] = 'Busca Completa na API'
+    msg['Subject'] = 'ATENÇÃO - ERRO NO SISTEMA FRATELLO'
     msg['From'] = sender
     msg['To'] = email
     with smtplib.SMTP('smtp.mailgun.org', 587) as smtp_server:

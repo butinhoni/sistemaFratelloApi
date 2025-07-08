@@ -1,6 +1,11 @@
 import pandas as pd
 from datetime import datetime
 from funcoes import SimpleCommand
+import logging
+from logging_config import configurar_logging
+
+configurar_logging(r'logs/ler_planilha_online.log')
+
 
 
 def scrapSheet():
@@ -8,7 +13,7 @@ def scrapSheet():
     sheet_url = "https://docs.google.com/spreadsheets/d/1-uienEQQZXOX2svsSwB8CI8Ly3Ptrv9AzxDnofmBj0Q/export?format=xlsx"
 
     # lê as planilhas no arquivo excel
-    print('Lendo as plnilhas da pasta')
+    logging.info('Lendo as planilhas da pasta')
     pasta = pd.ExcelFile(sheet_url)
     sheets = pasta.book.worksheets
     sheet = sheets[0]
@@ -21,7 +26,7 @@ def scrapSheet():
     # função pra iterar as planilhas
     def upfile(pastas, planilha):
         # Lê os dados e encontra a linha do cabeçalho
-        print('lendo conteúdo')
+        logging.info(f'Lendo conteúdo - {planilha}')
         df = pd.read_excel(pastas, planilha)
 
         linha_colunas = df[df.apply(lambda x: x.astype(str).str.contains('Frota', case=False, na=False).any(), axis=1)].index[0]
@@ -38,8 +43,7 @@ def scrapSheet():
         df.columns = ['numero', 'causa', 'obs', 'data']
         df['data'] = pd.to_datetime(df['data'], errors = 'coerce', dayfirst=True)
         df['obra'] = planilha
-        print(df)
-        
+       
 
         # Remove linhas onde 'Nº de Frota' ou 'Data' estão vazias
         df = df.dropna(thresh = 3)
@@ -87,9 +91,11 @@ def scrapSheet():
 
 
     # gera as tabelas
+    logging.info('Gerando tabelas')
+    logging.info(f'Planilhas = {sheets}')
     for sheet in sheets:
         df = (upfile(sheet_url, sheet.title))
         comandos = (gerarComandos(df))
         for comm in comandos:
             SimpleCommand(comm)
-        print(f'{sheet.title} - UPADA')
+        logging.info(f'{sheet.title} - UPADA')

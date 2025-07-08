@@ -9,7 +9,7 @@ def configurar_logging(nome_arquivo='log.log', nivel=logging.DEBUG):
     # Cria o handler com rotação
     file_handler = RotatingFileHandler(
         nome_arquivo,
-        maxBytes=1024 * 100,  # 100 KB
+        maxBytes=1024 * 1000,  # 100 KB
         backupCount=5,
         encoding='utf-8'
     )

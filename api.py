@@ -61,5 +61,6 @@ def get_tabela():
     df = df.to_json(orient='table', default_handler=str)
 
     return jsonify(df)
+
 if __name__ == 'main':
     app.run(host = '0.0.0.0', port=5000)
